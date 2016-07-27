@@ -1,3 +1,12 @@
 Rails.application.routes.draw do
-  # For details on the DSL available within this file, see http://guides.rubyonrails.org/routing.html
+  get '*path' => 'all#all'
+  post '*path' => 'all#all'
+  put '*path' => 'all#all'
+  patch '*path' => 'all#all'
+  delete '*path' => 'all#all'
+  match '*path' => 'all#all', via: :options
+
+  get '/' => 'all#all'
+
+  get '/test' => 'all#test'
 end
