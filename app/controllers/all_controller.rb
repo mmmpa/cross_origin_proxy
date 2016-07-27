@@ -66,7 +66,7 @@ class AllController < ApplicationController
     params.dup.permit!.to_h.tap do |posted|
       posted.delete(:controller)
       posted.delete(:action)
-      posted.delete(:path).to_s
+      posted.delete(:path)
     end
   end
 
