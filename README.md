@@ -1,24 +1,17 @@
-# README
+# Proxy server to test Ajax with a server without `Access-Control-Allow-Origin`
 
-This README would normally document whatever steps are necessary to get the
-application up and running.
+## Exec
 
-Things you may want to cover:
+```
+$ TARGET=http://you-want-to-ajax.server.com ALLOW=http://your-local-js.server.com rails s
+```
 
-* Ruby version
+## Notice
 
-* System dependencies
+This server uses global hash instance to store your all cookies from you-want-to-ajax.server.com.
 
-* Configuration
+Only use as a local server.
 
-* Database creation
+## Usage
 
-* Database initialization
-
-* How to run the test suite
-
-* Services (job queues, cache servers, search engines, etc.)
-
-* Deployment instructions
-
-* ...
+All requests and parameters are proxied to `TARGET`.
