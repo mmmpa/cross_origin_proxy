@@ -2,6 +2,11 @@ class AllController < ApplicationController
   cattr_accessor :stored_cookies
   self.stored_cookies = {}
 
+  def clear
+    self.class.stored_cookies = {}
+    head :ok
+  end
+
   def all
     headers['Access-Control-Allow-Credentials'] = 'true'
     headers['Access-Control-Allow-Methods'] = 'POST, PUT, DELETE, GET, OPTIONS'
@@ -19,11 +24,11 @@ class AllController < ApplicationController
           render plain: kicked.body, status: kicked.code
         end
       when RestClient::InternalServerError
-        head :internal_server_error
+        render json: JSON.parse(kicked.response.body), status: kicked.response.code
       when RestClient::BadRequest
-        head :bad_request
+        render json: JSON.parse(kicked.response.body), status: kicked.response.code
       else
-        render plain: kicked
+        render json: JSON.parse(kicked.response.body), status: kicked.response.code
     end
   end
 
