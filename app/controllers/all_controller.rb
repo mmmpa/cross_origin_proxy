@@ -17,7 +17,9 @@ class AllController < ApplicationController
     case kicked
       when RestClient::Response
         store_cookie(kicked.cookies)
-
+        kicked.cookies.each do |k, v|
+          cookies[k] = v
+        end
         begin
           render json: JSON.parse(kicked.body), status: kicked.code
         rescue
