@@ -1,72 +1,45 @@
 class AllController < ApplicationController
-  cattr_accessor :stored_cookies
-  self.stored_cookies = {}
-
-  def clear
-    self.class.stored_cookies = {}
-    head :ok
-  end
-
   def all
     headers['Access-Control-Allow-Credentials'] = 'true'
     headers['Access-Control-Allow-Methods'] = 'POST, PUT, DELETE, GET, OPTIONS'
     headers['Access-Control-Allow-Origin'] = ENV['ALLOW']
     headers['Access-Control-Request-Method'] = '*'
-    headers['Access-Control-Allow-Headers'] = 'Origin, X-Requested-With, Content-Type, Accept, Authorization'
-
-    case kicked
-      when RestClient::Response
-        store_cookie(kicked.cookies)
-        kicked.cookies.each do |k, v|
-          cookies[k] = v
-        end
-        begin
-          render json: JSON.parse(kicked.body), status: kicked.code
-        rescue
-          render plain: kicked.body, status: kicked.code
-        end
-      when RestClient::InternalServerError
-        render json: JSON.parse(kicked.response.body), status: kicked.response.code
-      when RestClient::BadRequest
-        render json: JSON.parse(kicked.response.body), status: kicked.response.code
-      else
-        render json: JSON.parse(kicked.response.body), status: kicked.response.code
-    end
+    headers['Access-Control-Allow-Headers'] = 'Origin, X-Requested-With, Content-Type, Accept, Authorization']
+    
+    respond_response(rest_response)
   end
 
   private
 
-  def request_id
-    # because session.id == nil in a request with OPTIONS
-    1
+  def respond_response(rest_res)
+    rest_res.cookies.each do |k, v|
+      cookies[k] = v
+    end
+    render_safety(rest_res)
   end
 
-  def store_cookie(val)
-    self.class.stored_cookies[request_id] = val
+  def render_safety(rest_res)
+    begin
+      render json: JSON.parse(rest_res.body), status: rest_res.code
+    rescue
+      render plain: rest_res.body, status: rest_res.code
+    end
   end
 
-  def stored_cookie
-    self.class.stored_cookies[request_id] || {}
-  end
-
-  def kicked
-    @kicked ||= begin
+  def rest_response
+    @rest_response ||= begin
       if posting?
-        RestClient.send(method, target, posted, {cookies: stored_cookie})
+        RestClient.send(method, target, posted, {cookies: request.cookies})
       else
-        RestClient.send(method, queried, {cookies: stored_cookie})
+        RestClient.send(method, queried_uri, {cookies: request.cookies})
       end
     rescue => e
-      e
+      e.response
     end
   end
 
   def posting?
     method != 'get' && method != 'options'
-  end
-
-  def path
-    params[:path]
   end
 
   def posted
@@ -82,12 +55,10 @@ class AllController < ApplicationController
   end
 
   def target
-    Pathname(ENV['TARGET']).join(path).to_s
+    Pathname(ENV['TARGET']).join(params[:path].to_s).to_s
   end
 
-  def queried
-    URI(target).tap { |uri|
-      uri.query = posted.to_param
-    }.to_s
+  def queried_uri
+    URI(target).tap { |uri| uri.query = posted.to_param }.to_s
   end
 end
